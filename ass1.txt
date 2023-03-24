@@ -1,0 +1,64 @@
+# import modules 
+import numpy as np 
+import matplotlib.pyplot as plt 
+import pandas as pd 
+import random
+k = 10    #number of arms
+T = 1000  #horizon  
+N = 20    #explore rounds
+bandit = np.random.random((k,)) #success prob. for each arm
+best = np.amax(bandit) #best arm
+#print('best arm = %d' %np.argmax(bandit))
+
+bandit_score = np.zeros((k,)) #total score of each arm for first N rounds
+pulls = np.zeros((k,)) #num of arm pulls
+inst_score = np.zeros((T,)) #reward for round t
+best_score = np.zeros((T,)) #cumulative reward of best arm for round t
+alg_score = np.zeros((T,)) #cumulative reward for round t
+regret =  np.zeros((T,)) #regret for round t
+
+
+#bandit reward distribution
+a = np.random.uniform(0,1,(k,));
+b = np.zeros((k,));
+for i in range(k):
+    b[i]=np.random.uniform(a[i],1)
+    
+mean = (a+b)/2
+best_arm = np.argmax(mean)
+
+#this code implements e-greedy algorithm
+epsilon = 1; 
+t = 0;
+bandit_scores = np.zeros((k,T))
+mean_estimate = np.zeros((k,));
+cum_score = 0;
+for t in range(T):
+    chance = np.random.uniform(0,1);
+    if chance < epsilon :
+        bandit_i  = np.random.randint(0,high=k-1)
+    else :
+        bandit_i = np.argmax(mean_estimate) 
+        
+    score = np.random.uniform(a[bandit_i], b[bandit_i])
+    inst_score[t] = score
+    alg_score[t] = cum_score + score
+    cum_score += score
+    regret[t] = mean[best_arm] - cum_score/(t+1)
+    bandit_scores[bandit_i,t] = score
+    mean_estimate[bandit_i] = np.sum(bandit_scores[bandit_i])/np.count_nonzero(bandit_scores[bandit_i])
+    
+    epsilon = ((t+1)**(-1/3))*((k*np.log(t+1))**(1/3))
+    
+    
+T_regret = T*mean[best_arm] - np.sum(inst_score);
+
+plt.plot(np.arange(1,T+1),alg_score)
+plt.xlabel("Round T")
+plt.ylabel("Total score") 
+plt.show()
+
+plt.plot(np.arange(1,T+1),regret)
+plt.xlabel("Round T")
+plt.ylabel("Total score") 
+plt.show()
