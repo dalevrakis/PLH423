@@ -1,0 +1,134 @@
+\documentclass[11pt, final]{article}
+
+%%%	Packages %%%
+\usepackage{amsmath}	% Align equations: align, gather
+\usepackage{amssymb}	% Math symbols: http://milde.users.sourceforge.net/LUCR/Math/mathpackages/amssymb-symbols.pdf
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}	% Number any line of an equation, can be used at end of align*
+
+\usepackage{enumitem}	% Custom enumeration: [label=(\arabic*)], [label=(\roman*)]
+\usepackage{moreenum}	% Custom enumeration: [label=(\greek*)]
+
+\usepackage{listings}	% Add code snippets
+\lstdefinestyle{mystyle}{ 
+	basicstyle=\ttfamily\footnotesize,
+	breaklines=true,
+	captionpos=t,		% b/t
+	numbers=left,		% left/right/none
+	numbersep=5pt,
+	showstringspaces=false,
+	tabsize=2
+}						% \lstinputlisting[language=X, firstline=A, lastline=B, caption=foo bar]{"Full Path"}
+\lstset{style=mystyle}	% Set the style
+
+\usepackage{graphicx}	% Figures
+\graphicspath{{"D:/Documents/HMMY/12th Semester/COMP423/Programming Assignment 2/Report/Images/"}}	% Separate figures path, default is .
+%\begin{figure}[h!]
+%	\centering
+%	\includegraphics[width=1\linewidth]{test.png}
+%	\caption{Όνομα σχήματος}
+%\end{figure}
+
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[greek,english]{babel}
+
+\newcommand{\en}{\selectlanguage{english}}	% Set language to english
+\newcommand{\el}{\selectlanguage{greek}}	% Set language to greek
+\newcommand{\latin}[1]{\en#1\el}			% English text in greek text environment
+\newcommand{\code}[1]{\texttt{\latin{#1}}}	% In-line code snippet
+\newcommand{\unit}[1]{\text{\latin{ #1}}}	% For upright font in math mode
+
+\usepackage{csquotes}	% enquote
+
+\usepackage{geometry}
+\geometry{
+	a4paper,
+	left=30mm,
+	right=30mm,
+	top=25mm,
+}
+
+\newcommand{\SheetTitle}[3]{	% {#1}: Title, {#2}: Subject, {#3}: Date (blank if unwanted)
+	{\noindent\Huge\bf{#1}}\\
+	[1.4\baselineskip]{{\large\bf\textsc{#2}}}\\
+	[0.2\baselineskip]
+	{\large\begin{tabular}{@{}ll}
+		\elΙωάννης Χαριομπόλης & 2017030054\\
+	\end{tabular}}\hfill{\large \textit{#3}}
+	\\[0.01\baselineskip]
+}
+%%%	Packages %%%
+\usepackage{mathtools}
+\usepackage{algpseudocodex}
+\usepackage{algorithm}
+\usepackage{cancel}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\begin{document}
+	\SheetTitle{Programming Assignment 2}{Reinforcement Learning and Dynamic Optimization}{April 28, 2023}
+	
+	You are given a dataset of real traffic loads over time (normalized), for a number of servers. These demands are non stationary.
+	
+	Your goal is to devise algorithms that learn to predict the least loaded server at every time round. Imagine, for example, that you had to offload computing tasks, one after another, to one of these servers: the higher the load of the server at that time, the longer the delay for your own offloaded task as well.
+	
+	\section*{Part I}
+	\begin{itemize}
+		\item[-] Implement the Multiplicative Weights algorithm assuming an "Experts" environment (i.e., you get to learn the load of other servers at every round, not just the one you chose).
+		
+		We chose $\eta = \sqrt{\frac{\ln k}{T}}$.
+		
+		\item[-] Implement the Multiplicative Weights algorithm assuming a "Bandit" environment.
+		
+		We chose $\eta = \epsilon = \sqrt[3]{\frac{k \ln k}{T}}$.
+				
+		\item[-] Compare the cumulative regret of the two algorithms, for horizon values $T = 1000$, $T = 7000$ (entire duration of dataset).
+		\begin{figure}[h!]
+			\centering
+			\begin{subfigure}[b]{0.45\textwidth}
+				\centering
+				\includegraphics[width=\textwidth]{mw_1000.png}
+				\caption{$T = 1000$}
+			\end{subfigure}
+			\hfill
+			\begin{subfigure}[b]{0.45\textwidth}
+				\centering
+				\includegraphics[width=\textwidth]{mw_7000.png}
+				\caption{$T = 7000$}
+			\end{subfigure}
+			\caption{Performance for the two implementations of the MW algorithm.}
+		\end{figure}
+	
+		Both algorithms stay well below their respective theoretical regret bounds, represented by color coded dashed curves. We can see that even though the bandits algorithm for the case where $T = 7000$ has a smaller regret initially it eventually even surpasses the regret bound for the experts algorithm, clearly showing its inferior performance. Although this doesn't necessarily happen for $T = 1000$, it performs worse there as well, especially after the midpoint of the horizon.
+	\end{itemize}
+	
+	\newpage
+	
+	\section*{Part II}
+	\begin{itemize}
+		\item[-] Adapt UCB to this problem as well (remember, you now have losses, not rewards as in the previous assignment).
+		
+		We set as the reward $r_i^{(t)}$ equal to the loss but negated, $-l_i^{(t)}$, which then makes the $i$ with the largest $\operatorname{ucb}_i(t) = \hat{\mu}_i + \sqrt{\frac{\ln T}{Q_i(t)}}$ be either the one with the smallest loss or the one that needs to be explored more, as we require.
+		
+		\item[-] Compare the performance of UCB to that of MW algorithm for the bandit setting (again for $T = 1000, T = 7000$).
+		\begin{figure}[h!]
+			\centering
+			\begin{subfigure}[b]{0.45\textwidth}
+				\centering
+				\includegraphics[width=\textwidth]{ucb_1000.png}
+				\caption{$T = 1000$}
+			\end{subfigure}
+			\hfill
+			\begin{subfigure}[b]{0.45\textwidth}
+				\centering
+				\includegraphics[width=\textwidth]{ucb_7000.png}
+				\caption{$T = 7000$}
+			\end{subfigure}
+			\caption{Performance of the UCB and the bandit MW algorithms.}
+		\end{figure}
+		
+		As expected the UCB algorithm performs worse than the bandit multiplicative weights algorithm, nonetheless it never surpasses the upper regret bound, even for the case where $T = 7000$.
+		
+	\end{itemize}
+	
+\end{document}
